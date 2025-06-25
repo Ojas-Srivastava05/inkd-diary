@@ -1,123 +1,76 @@
-
-
-✍️ INK’D - Digital Diary Terminal
-
-INK’D is a Node.js + Express web application that:
-	•	Accepts diary entries via a web form
-	•	Generates a beautifully styled PDF
-	•	Creates a downloadable QR code linking to the PDF
-	•	Uses Cohere AI to generate a rich summary
-	•	Presents everything in a futuristic, animated HTML UI
-
-Hosted on: 👉 https://inkd-diary.onrender.com
+Understood. Here’s your clean, copy-paste README without the folder structure — straight to the point, no fluff:
 
 ⸻
 
-🚀 Features
-	•	📝 User-friendly diary entry form
-	•	📄 PDF generation using pdfkit
-	•	📷 QR code generation using qrcode
-	•	🤖 AI-powered summary via Cohere AI
-	•	🌐 Hosted for free on Render
 
-⸻
+# ✍️ INK'D - Digital Diary Terminal
 
-📁 Project Structure
+**INK'D** is a futuristic AI-powered diary app built using Node.js, Express, HTML/CSS/JS, and Cohere API. It lets you submit diary entries, generate PDFs, get QR codes linking to them, and receive smart AI-generated summaries.
 
-inkd-diary/
-│
-├── public/
-│   ├── form.html         # Diary form
-│   ├── result.html       # Result display page
-│   ├── output.pdf        # Generated PDF (after form submission)
-│   ├── qr.png            # Generated QR code
-│   └── summary.txt       # AI-generated summary
-│
-├── .env                  # Your Cohere API key
-├── index.js              # Main Express server file
-├── package.json          # Node.js dependencies
-└── README.md             # This file
+🔗 **Live App**: [https://inkd-diary.onrender.com](https://inkd-diary.onrender.com)
 
+---
 
-⸻
+## 💡 Features
 
-🛠️ Installation (Local)
-	1.	Clone the repo
+- 📝 Submit diary entries via a clean UI
+- 📄 PDF is auto-generated for each entry
+- 📷 QR code links to your generated PDF
+- 🤖 Cohere AI summarizes the entry in detail
+- 🎨 Animated, responsive frontend
 
-git clone https://github.com/Ojas-Srivastava05/inkd-diary.git
-cd inkd-diary
+---
 
-	2.	Install dependencies
+## 🚀 Deploy on Render (for your own fork)
+
+1. Go to [https://render.com](https://render.com)
+2. Click **"New Web Service"**
+3. Connect your GitHub repo
+4. Use these settings:
+   - **Build Command**: `npm install`
+   - **Start Command**: `node index.js`
+   - **Environment Variable**:  
+     `COHERE_API_KEY=your_actual_key`
+5. Click **Deploy**
+
+---
+
+## 🧪 Local Development
+
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/Ojas-Srivastava05/inkd-diary.git
+   cd inkd-diary
+
+	2.	Install dependencies:
 
 npm install
 
-	3.	Add your Cohere API key
 
-Create a .env file:
+	3.	Create a .env file:
 
-COHERE_API_KEY=your-cohere-api-key-here
+COHERE_API_KEY=your_actual_key_here
 
-	4.	Run the app locally
+
+	4.	Start the server:
 
 node index.js
 
-Visit http://localhost:3000
+
+	5.	Open http://localhost:3000
 
 ⸻
 
-🌐 Deployment (on Render)
-	1.	Go to render.com
-	2.	Create a new Web Service
-	3.	Connect your GitHub repo
-	4.	Fill the Render settings:
-
-Setting	Value
-Build Command	npm install
-Start Command	node index.js
-Environment Vars	COHERE_API_KEY=...
-
-	5.	Click Deploy
-
-Done! 🎉
+🛡️ Security Notes
+	•	Never commit your .env file to GitHub.
+	•	Cohere API key must remain private.
 
 ⸻
 
-📦 Dependencies
-	•	Express
-	•	pdfkit
-	•	qrcode
-	•	dotenv
-	•	cohere-ai
+🧠 Powered By
+	•	Node.js
+	•	Express.js
+	•	Cohere API
+	•	Render
 
-⸻
-
-📌 Notes
-	•	Works best with longer diary entries (for detailed AI summaries)
-	•	Summary generation happens on the server and saves to /public/summary.txt
-	•	You can view or download the summary directly from the result page
-
-⸻
-
-📸 Screenshots
-
-Coming soon…
-
-⸻
-
-💡 Inspiration
-
-You wanted to make something cool with HTML, CSS, JS, and Node — and this is your first full-stack project successfully hosted! 🙌
-
-⸻
-
-🧠 Author
-
-Ojas Srivastava
-
-⸻
-
-⚠️ Disclaimer
-
-This is a personal project using Cohere’s free tier. For commercial use, please comply with Cohere’s terms.
-
-
+---
