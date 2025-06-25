@@ -1,6 +1,4 @@
-Got it. Here’s a ready-to-copy README.md for your Ink’d Diary Node.js + Express web app project hosted on Render:
 
-⸻
 
 ✍️ INK’D - Digital Diary Terminal
 
@@ -122,6 +120,4 @@ Ojas Srivastava
 
 This is a personal project using Cohere’s free tier. For commercial use, please comply with Cohere’s terms.
 
-⸻
 
-Let me know if you want this as a downloadable .md file!
