@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ink'd - Processing Complete</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Space+Grotesk:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #ff0080;
+            --accent-tertiary: #9d4edd;
+            --accent-green: #00ff88;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666677;
+            --border-color: #2a2a3e;
+            --border-hover: #00d4ff;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 25s linear infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 30%, rgba(157, 78, 221, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+            animation: gradientFloat 15s ease-in-out infinite;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes gradientFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(-20px, -30px) rotate(1deg); }
+            66% { transform: translate(20px, -20px) rotate(-1deg); }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Floating Tetris pieces */
+        .tetris-piece {
+            position: fixed;
+            font-size: 2rem;
+            color: var(--accent-cyan);
+            z-index: 2;
+            pointer-events: none;
+            animation: tetrisFall 15s linear infinite;
+            opacity: 0.6;
+        }
+
+        .tetris-piece:nth-child(1) { left: 10%; animation-delay: 0s; color: var(--accent-primary); }
+        .tetris-piece:nth-child(2) { left: 20%; animation-delay: 3s; color: var(--accent-secondary); }
+        .tetris-piece:nth-child(3) { left: 30%; animation-delay: 6s; color: var(--accent-tertiary); }
+        .tetris-piece:nth-child(4) { left: 40%; animation-delay: 9s; color: var(--accent-green); }
+        .tetris-piece:nth-child(5) { left: 50%; animation-delay: 12s; color: var(--accent-yellow); }
+        .tetris-piece:nth-child(6) { left: 60%; animation-delay: 2s; color: var(--accent-primary); }
+        .tetris-piece:nth-child(7) { left: 70%; animation-delay: 5s; color: var(--accent-secondary); }
+        .tetris-piece:nth-child(8) { left: 80%; animation-delay: 8s; color: var(--accent-tertiary); }
+
+        @keyframes tetrisFall {
+            0% { 
+                top: -100px; 
+                transform: rotate(0deg); 
+            }
+            100% { 
+                top: 100vh; 
+                transform: rotate(360deg); 
+            }
+        }
+
+        /* Glitch effect elements */
+        .glitch-bar {
+            position: fixed;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-secondary), transparent);
+            z-index: 3;
+            animation: glitchScan 12s linear infinite;
+        }
+
+        @keyframes glitchScan {
+            0% { top: 0%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            padding-top: 140px;
+        }
+
+        .brand-header {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .brand-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 5px;
+        }
+
+        .status-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .status-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: var(--accent-green);
+            margin-bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: 
+                0 16px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0s; }
+        .result-card:nth-child(2) { animation-delay: 1s; }
+        .result-card:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            animation: iconGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes iconGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
+            50% { filter: drop-shadow(0 0 15px currentColor); }
+        }
+
+        .card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #qrcode {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 0, 128, 0.4);
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .summary-card {
+            grid-column: 1 / -1;
+        }
+
+        .summary-text {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 150px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+
+        .original-text {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, var(--accent-tertiary), var(--accent-secondary));
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(157, 78, 221, 0.4);
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .footer::before {
+            content: '[ ';
+            color: var(--accent-primary);
+        }
+
+        .footer::after {
+            content: ' ]';
+            color: var(--accent-primary);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .result-card {
+                padding: 24px;
+            }
+            
+            .brand-name {
+                font-size: 2rem;
+            }
+            
+            .status-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Loading states */
+        .processing {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .processing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: loading 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated grid background -->
+    <div class="glitch-bar"></div>
+
+    <!-- Falling Tetris pieces -->
+    <div class="tetris-piece">▇▇</div>
+    <div class="tetris-piece">▇▇▇</div>
+    <div class="tetris-piece">▇▇</div>
+    <div class="tetris-piece">▇▇▇▇</div>
+    <div class="tetris-piece">▇▇</div>
+    <div class="tetris-piece">▇▇▇</div>
+    <div class="tetris-piece">▇▇</div>
+    <div class="tetris-piece">▇▇▇▇</div>
+
+    <div class="container">
+        <div class="brand-header">
+            <div class="brand-name">INK'D</div>
+            <div class="subtitle">Digital Diary Terminal</div>
+        </div>
+
+        <div class="status-header">
+            <div class="status-title">✅ PROCESSING COMPLETE</div>
+            <div class="status-subtitle">quantum_analysis.exe finished successfully</div>
+        </div>
+
+        <div class="results-grid">
+            <!-- QR Code Card -->
+            <div class="result-card">
+                <div class="card-header">
+                    <div class="card-icon" style="color: var(--accent-primary);">📸</div>
+                    <div class="card-title">QR CODE</div>
+                </div>
+                <div class="qr-container">
+                    <img src="/qr.png" id="qrImage" style="width: 200px;" alt="QR Code" />
+                    <button class="download-btn" onclick="downloadQR()">Download QR Image</button>
+                </div>
+            </div>
+
+            <!-- PDF Download Card -->
+            <div class="result-card">
+                <div class="card-header">
+                    <div class="card-icon" style="color: var(--accent-green);">✅</div>
+                    <div class="card-title">PDF EXPORT</div>
+                </div>
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 4rem; color: var(--accent-green); margin-bottom: 20px;">📄</div>
+                    <div style="color: var(--text-secondary); margin-bottom: 20px;">
+                        Your diary entry has been formatted and secured
+                    </div>
+                    <button class="download-btn" onclick="downloadPDF()">
+                        Download PDF Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Summary Card -->
+            <div class="result-card summary-card">
+                <div class="card-header">
+                    <div class="card-icon" style="color: var(--accent-tertiary);">🧠</div>
+                    <div class="card-title">AI ANALYSIS</div>
+                </div>
+                
+                <div class="original-text" id="originalText">
+                    Original text will appear here...
+                </div>
+                
+                <div class="summary-text" id="summaryText">
+                    Generating AI summary...
+                </div>
+                
+                <!-- Download buttons for AI summary -->
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                    <a href="/summary.txt" target="_blank">
+                        <button class="download-btn">📄 View Full AI Summary</button>
+                    </a>
+                    <a href="/summary.txt" download="inkd-summary.txt">
+                        <button class="download-btn">⬇️ Download AI Summary</button>
+                    </a>
+                </div>
+                
+                <div class="stats-row">
+                    <span id="summaryStats">Analysis: Complete</span>
+                    <span id="confidenceScore">Confidence: 98.7%</span>
+                    <span id="processingTime">Time: 0.42s</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="back-btn" onclick="goBack()">
+            ← Create New Entry
+        </button>
+    </div>
+
+    <div class="footer">
+        neural_network_active • memories_secured • consciousness_archived
+    </div>
+
+    <script>
+        const sampleText = localStorage.getItem('inkd_text') || 'No diary entry found.';
+    
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set original text
+            document.getElementById('originalText').textContent = sampleText;
+    
+            // Generate QR Code
+            generateQRCode();
+    
+            // Generate AI summary
+            generateAISummary();
+    
+            // Glitch animation
+            setTimeout(addGlitchEffect, 2000);
+        });
+    
+        function generateQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+            const qr = qrcode(0, 'M');
+            qr.addData(sampleText);
+            qr.make();
+            qrContainer.innerHTML = qr.createImgTag(4);
+        }
+    
+        function generateAISummary() {
+            const summaryElement = document.getElementById('summaryText');
+            summaryElement.innerHTML = '<div style="color: var(--accent-primary); text-align: center;">🤖 Fetching AI summary...</div>';
+
+            fetch('/summary.txt')
+                .then(res => res.text())
+                .then(summary => {
+                    summaryElement.textContent = summary;
+                    summaryElement.style.whiteSpace = 'pre-line'; // respects new lines
+                })
+                .catch(() => {
+                    summaryElement.textContent = '❌ Could not load AI summary.';
+                });
+        }
+    
+        function downloadQR() {
+            fetch('/qr.png')
+                .then(res => res.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'inkd-qr-code.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(err => {
+                    alert("❌ Failed to download QR code");
+                    console.error(err);
+                });
+        }
+    
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+    
+            doc.setFontSize(20);
+            doc.text("INK'D - Digital Diary Entry", 20, 30);
+    
+            doc.setFontSize(12);
+            doc.text('Generated: ' + new Date().toLocaleDateString(), 20, 45);
+    
+            doc.setFontSize(11);
+            const splitText = doc.splitTextToSize(sampleText, 170);
+            doc.text(splitText, 20, 60);
+    
+            doc.save('inkd-diary-entry.pdf');
+        }
+    
+        function goBack() {
+            window.location.href = "/form.html"; // ✅ redirect back to the form
+        }
+    
+        function addGlitchEffect() {
+            const title = document.querySelector('.status-title');
+            if (Math.random() < 0.5) {
+                title.style.animation = 'glitch1 0.3s ease-in-out';
+                setTimeout(() => {
+                    title.style.animation = 'pulse 2s ease-in-out infinite';
+                }, 300);
+            }
+        }
+    
+        setInterval(() => {
+            if (Math.random() < 0.1) {
+                addGlitchEffect();
+            }
+        }, 5000);
+    
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                downloadPDF();
+            }
+            if (e.ctrlKey && e.key === 'q') {
+                e.preventDefault();
+                downloadQR();
+            }
+            if (e.key === 'Escape') {
+                goBack();
+            }
+        });
+    </script>
+</body>
+</html>
